@@ -1,5 +1,58 @@
 package com.infratrans.taxi.onboard;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.hardware.GeomagneticField;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.provider.Settings;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.MeasureSpec;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.androidquery.AQuery;
+import com.androidquery.callback.AjaxCallback;
+import com.androidquery.callback.AjaxStatus;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -16,97 +69,22 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.RadarData;
 import com.github.mikephil.charting.data.RadarDataSet;
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
-import com.github.mikephil.charting.interfaces.datasets.IDataSet;
-import com.github.mikephil.charting.interfaces.datasets.IRadarDataSet;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.graphics.Typeface;
-import android.hardware.GeomagneticField;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.animation.Animation.AnimationListener;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.media.MediaPlayer;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.provider.Settings;
-import android.support.v4.app.FragmentActivity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-
-import android.view.View.MeasureSpec;
-import android.view.View.OnClickListener;
-
-import com.github.mikephil.charting.animation.Easing;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.interfaces.datasets.IRadarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-
 import com.google.android.gms.maps.GoogleMap.OnCameraChangeListener;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -114,25 +92,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import com.infratrans.taxi.onboard.markerclusterer.MarkerCluster;
-import com.infratrans.taxi.onboard.markerclusterer.MarkerClusterer;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBuffer;
-import com.google.android.gms.location.places.Places;
-import com.androidquery.AQuery;
-import com.androidquery.callback.AjaxCallback;
-import com.androidquery.callback.AjaxStatus;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 import com.infratrans.taxi.onboard.json.JSONParser;
+import com.infratrans.taxi.onboard.markerclusterer.MarkerCluster;
+import com.infratrans.taxi.onboard.markerclusterer.MarkerClusterer;
 import com.infratrans.taxi.onboard.services.GMapV2Direction;
 import com.infratrans.taxi.onboard.services.GoogleDirectionStep;
 import com.infratrans.taxi.onboard.services.JobTracking;
@@ -166,8 +131,13 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -764,7 +734,8 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
                                                 timerMeter.cancel();
                                                 timerMeter = null;
-                                                aq.id(R.id.btn_Start_Mter).visible();
+                                                aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
+                                                aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
                                                 aq.id(R.id.icon_thum).visible();
 
                                                 if (AppSharedPreferences.getInstance(HomeActivity.this).getJobType().equalsIgnoreCase("2")) {
@@ -852,20 +823,25 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                                     HashMap<String, Object> resultObj = (HashMap<String, Object>) json.convertJson2HashMap();
 
                                     if (String.valueOf(resultObj.get("code")).equalsIgnoreCase("200")) {
-                                        aq.id(R.id.networkClose).visibility(View.GONE);
+//                                        aq.id(R.id.networkClose).visibility(View.GONE);
                                         aq.id(R.id.networkOpen).visible();
+                                        aq.id(R.id.networkOpen).image(R.drawable.icon_system_run);
                                     } else {
-                                        aq.id(R.id.networkOpen).visibility(View.GONE);
-                                        aq.id(R.id.networkClose).visible();
+                                        aq.id(R.id.networkOpen).visibility(View.VISIBLE);
+//                                        aq.id(R.id.networkClose).visible();
+
+                                        aq.id(R.id.networkOpen).image(R.drawable.icon_system_down);
                                     }
 
                                 } catch (JSONException e) {
-                                    aq.id(R.id.networkOpen).visibility(View.GONE);
-                                    aq.id(R.id.networkClose).visible();
+                                    aq.id(R.id.networkOpen).visibility(View.VISIBLE);
+//                                    aq.id(R.id.networkClose).visible();
+                                    aq.id(R.id.networkOpen).image(R.drawable.icon_system_down);
                                     e.printStackTrace();
                                 } catch (RuntimeException e) {
-                                    aq.id(R.id.networkOpen).visibility(View.GONE);
-                                    aq.id(R.id.networkClose).visible();
+                                    aq.id(R.id.networkOpen).visibility(View.VISIBLE);
+//                                    aq.id(R.id.networkClose).visible();
+                                    aq.id(R.id.networkOpen).image(R.drawable.icon_system_down);
                                     e.printStackTrace();
                                 }
 
@@ -1285,8 +1261,9 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                     }
 
                 } catch (JSONException e) {
-                    aq.id(R.id.networkOpen).visibility(View.GONE);
-                    aq.id(R.id.networkClose).visible();
+                    aq.id(R.id.networkOpen).visibility(View.VISIBLE);
+//                    aq.id(R.id.networkClose).visible();
+                    aq.id(R.id.networkOpen).image(R.drawable.icon_system_down);
                     e.printStackTrace();
                 }
 
@@ -1940,20 +1917,22 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
         aq.id(R.id.internetOpen).visibility(View.GONE);
         aq.id(R.id.internetClose).visibility(View.GONE);
-        aq.id(R.id.networkClose).visibility(View.GONE);
+        //aq.id(R.id.networkClose).visibility(View.GONE);
         aq.id(R.id.networkOpen).visibility(View.GONE);
 
         aq.id(R.id.btn_menu).clicked(this);
+        aq.id(R.id.btn_menu).image(R.drawable.icon_main_menu_non_active);
+
         aq.id(R.id.home_customer_pix).clicked(this);
         aq.id(R.id.btn_Call).clicked(this);
 
-        aq.id(R.id.btn_traffic_non).clicked(this);
-        aq.id(R.id.btn_traffic_non).visibility(View.GONE);
+//        aq.id(R.id.btn_traffic_non).clicked(this);
+//        aq.id(R.id.btn_traffic_non).visibility(View.GONE);
         aq.id(R.id.btn_traffic).clicked(this);
         aq.id(R.id.btn_traffic).visibility(View.GONE);
 
-        aq.id(R.id.btn_menu_close).clicked(this);
-        aq.id(R.id.btn_menu_close).visibility(View.GONE);
+        //aq.id(R.id.btn_menu_close).clicked(this);
+        //aq.id(R.id.btn_menu_close).visibility(View.GONE);
         aq.id(R.id.home_btn_mylocation).visibility(View.GONE);
 
 
@@ -1962,8 +1941,9 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
         aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
         aq.id(R.id.btn_Start_Mter).clicked(this);
-        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
-        aq.id(R.id.btn_Stop_Meter).clicked(this);
+
+//        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+//        aq.id(R.id.btn_Stop_Meter).clicked(this);
 
         aq.id(R.id.home_topframe2).visibility(View.GONE);
         aq.id(R.id.home_customer_pix).visibility(View.GONE);
@@ -2163,6 +2143,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                     timerMeter = null;
                 }
                 aq.id(R.id.btn_Start_Mter).visible();
+                aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
                 aq.id(R.id.icon_thum).visible();
 
                 if (AppSharedPreferences.getInstance(this).getJobType().equalsIgnoreCase("2")) {
@@ -2228,55 +2209,106 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                 break;
 
             case R.id.btn_traffic:
-                aq.id(R.id.btn_traffic).visibility(View.GONE);
-                aq.id(R.id.btn_traffic_non).visible();
-                mapview.setTrafficEnabled(false);
+                if(Status.check_btn_traffic == true){
+                    aq.id(R.id.btn_traffic).visibility(View.VISIBLE);
+//                    aq.id(R.id.btn_traffic_non).visible();
+                    aq.id(R.id.btn_traffic).image(R.drawable.icon_traffic_non_active);
+
+                    mapview.setTrafficEnabled(false);
+                    Status.check_btn_traffic = !Status.check_btn_traffic;
+                }
+                else{
+//                    aq.id(R.id.btn_traffic_non).visibility(View.GONE);
+                    aq.id(R.id.btn_traffic).visible();
+                    aq.id(R.id.btn_traffic).image(R.drawable.icon_traffic_active);
+                    mapview.setTrafficEnabled(true);
+                    Status.check_btn_traffic = !Status.check_btn_traffic;
+                }
                 break;
 
-            case R.id.btn_traffic_non:
-                aq.id(R.id.btn_traffic_non).visibility(View.GONE);
-                aq.id(R.id.btn_traffic).visible();
-                mapview.setTrafficEnabled(true);
-
-                break;
+//            case R.id.btn_traffic_non:
+//                aq.id(R.id.btn_traffic_non).visibility(View.GONE);
+//                aq.id(R.id.btn_traffic).visible();
+//                mapview.setTrafficEnabled(true);
+//                break;
 
             case R.id.btn_menu:
 
-                aq.id(R.id.button).visible();
-                aq.id(R.id.btn_menu).visibility(View.GONE);
-                aq.id(R.id.btn_menu_close).visible();
-                aq.id(R.id.btn_traffic_non).visible();
-                aq.id(R.id.home_btn_gas).visible();
-                aq.id(R.id.home_btn_incident).visible();
-                aq.id(R.id.btn_navigation).visible();
-                aq.id(R.id.home_btn_mylocation).visible();
+                if(Status.check_btn_menu == true){
+                    aq.id(R.id.button).visible();
 
-                aq.id(R.id.btn_traffic_non).animate(fade_in);
-                aq.id(R.id.home_btn_gas).animate(fade_in);
-                aq.id(R.id.home_btn_incident).animate(fade_in);
-                aq.id(R.id.btn_navigation).animate(fade_in);
-                aq.id(R.id.home_btn_mylocation).animate(fade_in);
+//                    aq.id(R.id.btn_menu).visibility(View.GONE);
+//                    aq.id(R.id.btn_menu_close).visible();
+                    aq.id(R.id.btn_menu).image(R.drawable.icon_main_menu_active);
+
+                    aq.id(R.id.btn_traffic).visible();
+                    aq.id(R.id.btn_traffic).image(R.drawable.icon_traffic_non_active);
+                    aq.id(R.id.home_btn_gas).visible();
+                    aq.id(R.id.home_btn_incident).visible();
+                    aq.id(R.id.btn_navigation).visible();
+                    aq.id(R.id.home_btn_mylocation).visible();
+
+                    aq.id(R.id.btn_traffic).animate(fade_in);
+                    aq.id(R.id.home_btn_gas).animate(fade_in);
+                    aq.id(R.id.home_btn_incident).animate(fade_in);
+                    aq.id(R.id.btn_navigation).animate(fade_in);
+                    aq.id(R.id.home_btn_mylocation).animate(fade_in);
+                    Status.check_btn_menu = !Status.check_btn_menu;
+                    Log.i("menu","1");
+                }
+                else{
+                    aq.id(R.id.button).visibility(View.GONE);
+                    aq.id(R.id.cluster).visibility(View.GONE);
+
+//                    aq.id(R.id.btn_menu_close).visibility(View.GONE);
+//                    aq.id(R.id.btn_menu).visible();
+                    aq.id(R.id.btn_menu).image(R.drawable.icon_main_menu_non_active);
+
+                    aq.id(R.id.home_btn_gas).visibility(View.GONE);
+                    aq.id(R.id.home_btn_incident).visibility(View.GONE);
+                    aq.id(R.id.home_btn_mylocation).visibility(View.GONE);
+                    aq.id(R.id.btn_navigation).visibility(View.GONE);
+                    aq.id(R.id.btn_traffic).visibility(View.GONE);
+//                    aq.id(R.id.btn_traffic_non).visibility(View.GONE);
+
+                    Status.check_btn_menu = !Status.check_btn_menu;
+                    Log.i("menu","2");
+                }
+//                aq.id(R.id.button).visible();
+//                aq.id(R.id.btn_menu).visibility(View.GONE);
+//                aq.id(R.id.btn_menu_close).visible();
+//                aq.id(R.id.btn_traffic_non).visible();
+//                aq.id(R.id.home_btn_gas).visible();
+//                aq.id(R.id.home_btn_incident).visible();
+//                aq.id(R.id.btn_navigation).visible();
+//                aq.id(R.id.home_btn_mylocation).visible();
+//
+//                aq.id(R.id.btn_traffic_non).animate(fade_in);
+//                aq.id(R.id.home_btn_gas).animate(fade_in);
+//                aq.id(R.id.home_btn_incident).animate(fade_in);
+//                aq.id(R.id.btn_navigation).animate(fade_in);
+//                aq.id(R.id.home_btn_mylocation).animate(fade_in);
 
 
                 break;
 
-            case R.id.btn_menu_close:
-
-                aq.id(R.id.button).visibility(View.GONE);
-                aq.id(R.id.cluster).visibility(View.GONE);
-                aq.id(R.id.btn_menu_close).visibility(View.GONE);
-
-                aq.id(R.id.btn_menu).visible();
-                aq.id(R.id.home_btn_gas).visibility(View.GONE);
-                aq.id(R.id.home_btn_incident).visibility(View.GONE);
-                aq.id(R.id.home_btn_mylocation).visibility(View.GONE);
-                aq.id(R.id.btn_navigation).visibility(View.GONE);
-                aq.id(R.id.btn_traffic).visibility(View.GONE);
-                aq.id(R.id.btn_traffic_non).visibility(View.GONE);
-
-
-
-                break;
+//            case R.id.btn_menu_close:
+//
+//                aq.id(R.id.button).visibility(View.GONE);
+//                aq.id(R.id.cluster).visibility(View.GONE);
+//                aq.id(R.id.btn_menu_close).visibility(View.GONE);
+//
+//                aq.id(R.id.btn_menu).visible();
+//                aq.id(R.id.home_btn_gas).visibility(View.GONE);
+//                aq.id(R.id.home_btn_incident).visibility(View.GONE);
+//                aq.id(R.id.home_btn_mylocation).visibility(View.GONE);
+//                aq.id(R.id.btn_navigation).visibility(View.GONE);
+//                aq.id(R.id.btn_traffic).visibility(View.GONE);
+//                aq.id(R.id.btn_traffic_non).visibility(View.GONE);
+//
+//
+//
+//                break;
 
             case R.id.home_btn_gas:
                 //add
@@ -2338,34 +2370,56 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 //                break;
 
             case R.id.btn_Start_Mter:
-                String manStart = APIs.ManMeterstart();
-                aq.ajax(manStart, String.class, new AjaxCallback<String>() {
-                });
-                aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-                aq.id(R.id.btn_Stop_Meter).visible();
 
-                Status.enable = false;
-                AppSharedPreferences.getInstance(this).setJobType("1");
-                arrivedPickLocation(AppSharedPreferences.getInstance(this).getJobID());
-                //startJob(AppSharedPreferences.getInstance(this).getJobID(), AppSharedPreferences.getInstance(this).getJobType());
-                break;
+                if(Status.check_btn_meter == true){
+                    String manStart = APIs.ManMeterstart();
+                    aq.ajax(manStart, String.class, new AjaxCallback<String>() {
+                    });
 
-            case R.id.btn_Stop_Meter:
-                //not use
-                String manStop = APIs.ManMeterstop();
-                aq.ajax(manStop, String.class, new AjaxCallback<String>(){});
-                endJob(AppSharedPreferences.getInstance(this).getJobID(), enable_credit_card, reserved_type);
-//                check_get_job = false;
-                if(Status.enableNavigation) {
-                    closeNavigation();
+                    aq.id(R.id.btn_Start_Mter).visible();
+//                    aq.id(R.id.btn_Stop_Meter).visible();
+                    aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_close_meter);
+
+                    Status.enable = false;
+                    AppSharedPreferences.getInstance(this).setJobType("1");
+                    arrivedPickLocation(AppSharedPreferences.getInstance(this).getJobID());
+                    //startJob(AppSharedPreferences.getInstance(this).getJobID(), AppSharedPreferences.getInstance(this).getJobType());
+                    Status.check_btn_meter = !Status.check_btn_meter;
                 }
-                aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
-                Status.enable = true;
-
-                //endJob(AppSharedPreferences.getInstance(this).getJobID(),enable_credit_card,reserved_type);
-
+                else{
+                    //not use
+                    String manStop = APIs.ManMeterstop();
+                    aq.ajax(manStop, String.class, new AjaxCallback<String>(){});
+                    endJob(AppSharedPreferences.getInstance(this).getJobID(), enable_credit_card, reserved_type);
+//                check_get_job = false;
+                    if(Status.enableNavigation) {
+                        closeNavigation();
+                    }
+                    //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                    aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
+                    Status.enable = true;
+                    Status.check_btn_meter = !Status.check_btn_meter;
+                    //endJob(AppSharedPreferences.getInstance(this).getJobID(),enable_credit_card,reserved_type);
+                }
 
                 break;
+
+//            case R.id.btn_Stop_Meter:
+//                //not use
+//                String manStop = APIs.ManMeterstop();
+//                aq.ajax(manStop, String.class, new AjaxCallback<String>(){});
+//                endJob(AppSharedPreferences.getInstance(this).getJobID(), enable_credit_card, reserved_type);
+////                check_get_job = false;
+//                if(Status.enableNavigation) {
+//                    closeNavigation();
+//                }
+//                aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+//                Status.enable = true;
+//
+//                //endJob(AppSharedPreferences.getInstance(this).getJobID(),enable_credit_card,reserved_type);
+//
+//
+//                break;
 
 //            case R.id.home_btn_statusbar_3:
 //                aq.id(R.id.home_btn_statusbar_3).background(R.drawable.home_status2_active);
@@ -2758,8 +2812,9 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                             aq.id(R.id.home_btn_statusbar_3).clicked(null);
                             aq.id(R.id.btn_thumbing).visibility(View.VISIBLE);
 
-                            aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-                            aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+                            aq.id(R.id.btn_Start_Mter).visible();
+                            //aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+                            aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_close_meter);
 
                             aq.id(R.id.btn_pick_customer).visibility(View.GONE);
 
@@ -3124,7 +3179,8 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                         aq.id(R.id.btn_thumbing).visibility(View.GONE);
 
                         aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
-                        aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+                        aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
+                        //aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
 
                         aq.id(R.id.bt_jobtype_1).visibility(View.VISIBLE);
                         aq.id(R.id.bt_jobtype_2).visibility(View.GONE);
@@ -3404,7 +3460,8 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
 
                         aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
-                        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                        aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
+                        //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
 
                         startService(intent_taxi_status);
 
@@ -3424,7 +3481,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                         playAudio(R.raw.sound_standby);
                         //sound
                         aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-                        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                        //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
                         AppSharedPreferences.getInstance(HomeActivity.this).removeThumbingMode();
                         Global.showAlertDialog(HomeActivity.this, String.valueOf(resultObj.get("message")));
 
@@ -3615,8 +3672,10 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                             aq.id(R.id.home_taxi_status).image(R.drawable.status_on_job);
                             //sound
                             playAudio(R.raw.sound_onjob);
-                            aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-                            aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+                            aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
+//                            aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+
+                            aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_close_meter);
                             setTakeCustomerToDestination();
                         }
 
@@ -3708,7 +3767,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
                                 aq.id(R.id.home_btn_statusbar_4).clicked(HomeActivity.this);
                                 aq.id(R.id.home_btn_statusbar_3).clicked(null);
-                                aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                                //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
                                 aq.id(R.id.home_btn_statusbar_3).textColorId(R.color.white);
                                 aq.id(R.id.home_btn_statusbar_3).background(R.drawable.home_status2_active);
 
@@ -3728,7 +3787,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                             aq.id(R.id.home_btn_statusbar_4).textColorId(R.color.white);
                             aq.id(R.id.home_btn_statusbar_4).clicked(null);
                             aq.id(R.id.home_status).text(getString(R.string.home_title_3) + " " + getString(R.string.status_004));
-                            aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                            //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
 
                             //Toast.makeText(getApplicationContext(),"call hashmap data",Toast.LENGTH_LONG).show();
                             HashMap<String, Object> dataObj = (HashMap<String, Object>) resultObj.get("data");
@@ -4267,7 +4326,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
             aq.id(R.id.btn_thumbing).visibility(View.VISIBLE);
 
             aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-            aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+            //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
 
             aq.id(R.id.bt_jobtype_1).visibility(View.GONE);
             aq.id(R.id.bt_jobtype_2).visibility(View.VISIBLE);
@@ -4286,7 +4345,9 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
             aq.id(R.id.home_status).text(getString(R.string.home_title_3) + " " + getString(R.string.job_type_2));
 
             aq.id(R.id.btn_thumbing).visibility(View.GONE);
+
             aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
+            aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
 
             aq.id(R.id.bt_jobtype_1).visibility(View.GONE);
             aq.id(R.id.bt_jobtype_2).visibility(View.GONE);
@@ -4423,8 +4484,10 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
         aq.id(R.id.home_taxi_status).image(R.drawable.status_reserved);
         //sound
         playAudio(R.raw.sound_reserve);
+
         aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
-        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+//        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+        aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
 
         aq.id(R.id.home_status).text(getString(R.string.home_title_3) + " " + getString(R.string.status_002));
 
@@ -4644,7 +4707,8 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                 //sound
                 playAudio(R.raw.sound_reserve);
                 aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
-                aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+                aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_open_meter);
 
             }
 
@@ -4670,9 +4734,9 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
                 aq.id(R.id.home_taxi_status).image(R.drawable.status_on_job);
                 //sound
                 playAudio(R.raw.sound_onjob);
-                aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-                aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
-
+                aq.id(R.id.btn_Start_Mter).visibility(View.VISIBLE);
+                //aq.id(R.id.btn_Stop_Meter).visibility(View.VISIBLE);
+                aq.id(R.id.btn_Start_Mter).image(R.drawable.icon_close_meter);
 
             }
 
@@ -4726,7 +4790,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
 
         aq.id(R.id.btn_thumbing).visibility(View.VISIBLE);
         aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+        //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
 
 
         aq.id(R.id.btn_pick_customer).visibility(View.GONE);
@@ -4734,7 +4798,7 @@ public class HomeActivity extends FragmentActivity implements GoogleMap.OnInfoWi
         //sound
         //playAudio("สแตนบาย");
         aq.id(R.id.btn_Start_Mter).visibility(View.GONE);
-        aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
+        //aq.id(R.id.btn_Stop_Meter).visibility(View.GONE);
         aq.id(R.id.home_btn_sos).image(R.drawable.home_sos);
 
         aq.id(R.id.bt_jobtype_1).visibility(View.GONE);

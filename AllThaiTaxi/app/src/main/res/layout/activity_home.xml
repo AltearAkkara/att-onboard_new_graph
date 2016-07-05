@@ -625,13 +625,6 @@
 
         <ImageView
             android:padding="5dp"
-            android:id="@+id/btn_traffic_non"
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:src="@drawable/icon_traffic_non_active" />
-
-        <ImageView
-            android:padding="5dp"
             android:id="@+id/btn_traffic"
             android:layout_width="wrap_content"
             android:layout_height="60dp"
@@ -697,16 +690,6 @@
             android:src="@drawable/icon_system_run"/>
 
 
-
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:text="COM"
-            android:id="@+id/networkClose"
-            android:layout_gravity="center"
-            android:src="@drawable/icon_system_down"/>
-
-
     </LinearLayout>
 
 
@@ -754,16 +737,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/icon_open_meter"
             android:id="@+id/btn_Start_Mter" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/icon_close_meter"
-            android:id="@+id/btn_Stop_Meter"
-            android:layout_below="@+id/btn_Start_Mter"
-            android:layout_alignEnd="@+id/btn_Start_Mter"
-
-            android:clickable="true" />
 
     </LinearLayout>
 
@@ -820,18 +793,9 @@
         android:layout_alignParentStart="true">
 
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:id="@+id/btn_menu"
-            android:src="@drawable/icon_main_menu_non_active"
-            android:layout_below="@+id/home_topframe2"
-            android:layout_alignEnd="@+id/btn_menu_close"
-            android:layout_alignStart="@+id/btn_menu_close" />
-
-        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:id="@+id/btn_menu_close"
+            android:id="@+id/btn_menu"
             android:src="@drawable/icon_main_menu_active"
             android:layout_alignTop="@+id/btn_menu" />
 
